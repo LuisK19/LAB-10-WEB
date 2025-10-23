@@ -1,3 +1,144 @@
+/* Modal styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: #214469;
+  color: #fff;
+  padding: 2rem;
+  border-radius: 16px;
+  min-width: 320px;
+  max-width: 90vw;
+  max-height: 80vh;
+  overflow-y: auto;
+  position: relative;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.2);
+}
+
+.modal-details {
+  background: #214469;
+  padding: 1rem;
+  border-radius: 8px;
+  font-family: 'Fira Mono', 'Consolas', monospace;
+  font-size: 0.95em;
+  text-align: left;
+  white-space: pre-wrap;
+}
+
+/* Raw view for XML/JSON */
+.raw-view {
+  background: #214469;
+  padding: 1rem;
+  border-radius: 8px;
+  font-family: 'Fira Mono', 'Consolas', monospace;
+  font-size: 0.95em;
+  text-align: left;
+  white-space: pre-wrap;
+}
+
+.modal-toggle {
+  margin-bottom: 1rem;
+  text-align: right;
+}
+
+.modal-button {
+  cursor: pointer;
+  font-size: medium;
+  font-weight: bold;
+}
+
+.modal-loading {
+  text-align: center;
+  font-size: 1.2rem;
+  margin: 2rem 0;
+}
+
+.modal-error {
+  color: #ff4d4f;
+  background: #fff0f0;
+  padding: 1rem;
+  border-radius: 8px;
+  margin: 1rem 0;
+}
+/* Controls bar for filters and selects */
+.controls-bar {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  align-items: center;
+}
+
+.container-controls {
+  border: 1px solid #ccc;
+  padding: 0.5rem;
+  border-radius: 15px;
+  align-items: baseline;
+  display: flex;
+  flex-direction: row;
+}
+
+label {
+  font-size: 1rem;
+  color: #fff;
+  text-align: left;
+  margin-right: 0.5rem;
+
+}
+
+select {
+  padding: 0.5rem;
+  border-radius: 8px;
+  border: none;
+  font-size: 0.8rem;
+}
+
+
+/* Products grid layout */
+.products-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+}
+
+/* Product card style */
+.product-card {
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 1rem;
+  background: #214469;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+}
+
+.product-card button {
+  margin-top: 1rem;
+}
+
+/* Skeleton loading style */
+.product-skeleton {
+  background: #eee;
+  height: 120px;
+  border-radius: 8px;
+}
+
+/* Pagination bar */
+.pagination-bar {
+  margin-top: 2rem;
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  justify-content: center;
+}
+
 #root {
   max-width: 1280px;
   margin: 0 auto;
@@ -5,27 +146,6 @@
   text-align: center;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
-}
-
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
 
 @media (prefers-reduced-motion: no-preference) {
   a:nth-of-type(2) .logo {
@@ -34,9 +154,5 @@
 }
 
 .card {
-  padding: 2em;
-}
-
-.read-the-docs {
-  color: #888;
+  padding: 2rem;
 }
