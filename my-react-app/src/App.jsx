@@ -12,6 +12,36 @@ const SORT_OPTIONS = [
 ];
 
 function App() {
+  // Convierte XML string a array de productos JS
+  function parseProductsXML(xmlString) {
+    // Extrae todos los <data>...</data> usando regex, ignora errores de formato
+    const dataRegex = /<data>([\s\S]*?)<\/data>/g;
+    const productsArr = [];
+    let match;
+    while ((match = dataRegex.exec(xmlString)) !== null) {
+      const dataContent = match[1];
+      // Extrae campos dentro de <data>
+      const fieldRegex = /<([a-zA-Z0-9_]+)>([\s\S]*?)<\/\1>/g;
+      const obj = {};
+      let fieldMatch;
+      while ((fieldMatch = fieldRegex.exec(dataContent)) !== null) {
+        obj[fieldMatch[1]] = fieldMatch[2];
+      }
+      productsArr.push(obj);
+    }
+    // Paginación (opcional)
+    const pagination = {};
+    const pagMatch = /<pagination>([\s\S]*?)<\/pagination>/.exec(xmlString);
+    if (pagMatch) {
+      const pagContent = pagMatch[1];
+      const pagFieldRegex = /<([a-zA-Z0-9_]+)>([\s\S]*?)<\/\1>/g;
+      let pagFieldMatch;
+      while ((pagFieldMatch = pagFieldRegex.exec(pagContent)) !== null) {
+        pagination[pagFieldMatch[1]] = pagFieldMatch[2];
+      }
+    }
+    return { products: productsArr, pagination };
+  }
   // Renderiza propiedades de objetos anidados de forma amigable
   function renderDetails(obj, level = 0) {
     if (obj === null) return <span>null</span>;
@@ -45,24 +75,24 @@ function App() {
   const [pageSize, setPageSize] = useState(12);
   const [accept, setAccept] = useState('application/json');
   const [sort, setSort] = useState('name:asc');
-  const [rawView, setRawView] = useState(false);
-  const [rawData, setRawData] = useState('');
 
   useEffect(() => {
     let isMounted = true;
     setLoading(true);
     setError(null);
-    setRawView(false);
-    setRawData('');
     ProductsService.getProducts({ page, limit: pageSize, accept })
       .then(data => {
         if (!isMounted) return;
-        // Si es XML, guardar en rawData y mostrar vacío
         if (accept === 'application/xml') {
-          setProducts([]);
-          setRawData(data);
+          const { products: xmlProducts } = parseProductsXML(data);
+          console.log('Productos XML:', xmlProducts);
+          console.log('Cantidad XML:', xmlProducts.length);
+          setProducts(xmlProducts);
         } else {
-          setProducts(data.data || []);
+          const productos = data.data || [];
+          console.log('Productos JSON:', productos);
+          console.log('Cantidad JSON:', productos.length);
+          setProducts(productos);
         }
         setLoading(false);
       })
@@ -89,8 +119,12 @@ function App() {
         setSelectedProduct(data);
         setDetailRawData(JSON.stringify(data, null, 2));
       } else {
-        setSelectedProduct(null);
+        // XML: parsear y mostrar amigable y raw
         setDetailRawData(data);
+        // Buscar el producto por id en el XML
+        const { products: xmlProducts } = parseProductsXML(data);
+        const found = xmlProducts.find(p => p.id === id || p.ID === id);
+        setSelectedProduct(found || null);
       }
     } catch (err) {
       setDetailError('Error al cargar detalle: ' + err.message);
@@ -113,13 +147,18 @@ function App() {
     if (!products || products.length === 0) return [];
     const [field, direction] = sort.split(':');
     return [...products].sort((a, b) => {
+      // Convertir valores numéricos si es necesario
+      const aName = a.name || a.NAME || a.Nombre || a.nombre || '';
+      const bName = b.name || b.NAME || b.Nombre || b.nombre || '';
+      const aPrice = parseFloat(a.price || a.PRECIO || a.precio || 0);
+      const bPrice = parseFloat(b.price || b.PRECIO || b.precio || 0);
       if (field === 'name') {
-        if (a.name < b.name) return direction === 'asc' ? -1 : 1;
-        if (a.name > b.name) return direction === 'asc' ? 1 : -1;
+        if (aName < bName) return direction === 'asc' ? -1 : 1;
+        if (aName > bName) return direction === 'asc' ? 1 : -1;
         return 0;
       }
       if (field === 'price') {
-        return direction === 'asc' ? a.price - b.price : b.price - a.price;
+        return direction === 'asc' ? aPrice - bPrice : bPrice - aPrice;
       }
       return 0;
     });
@@ -173,30 +212,25 @@ function App() {
 
       {error && <div style={{ color: 'red' }}>{error}</div>}
 
-      {!loading && !error && accept === 'application/xml' && (
-        <div>
-          <h3>Vista Raw (XML)</h3>
-          <pre className="raw-view">{rawData || 'No hay datos.'}</pre>
-        </div>
-      )}
-
-      {!loading && !error && accept === 'application/json' && (
+      {!loading && !error && (
         <div>
           {sortedProducts.length === 0 ? (
             <div>No hay productos para mostrar.</div>
           ) : (
             <div className="products-grid">
-              {sortedProducts.map(product => (
-                <div key={product.id} className="product-card" onClick={() => handleOpenDetail(product.id)} style={{ cursor: 'pointer' }}>
-                  <strong>{product.name}</strong>
-                  <div>Precio: ${product.price}</div>
-                  <div>SKU: {product.sku}</div>
+              {sortedProducts.map((product, idx) => (
+                <div key={product.id || idx} className="product-card" onClick={() => handleOpenDetail(product.id || product.ID || product.sku || idx)} style={{ cursor: 'pointer' }}>
+                  <strong>{product.name || product.NAME || product.Nombre || product.nombre}</strong>
+                  <div>Precio: ${product.price || product.PRECIO || product.precio || ''}</div>
+                  <div>SKU: {product.sku || product.SKU || product.sku || ''}</div>
                 </div>
               ))}
             </div>
           )}
         </div>
       )}
+
+
 
       {/* Modal de detalle de producto */}
       {selectedProduct && (
@@ -231,13 +265,7 @@ function App() {
         </div>
       )}
 
-      {rawView && (
-        <div>
-          <h3>Vista Raw (JSON)</h3>
-          <pre className="raw-view">{rawData}</pre>
-          <button onClick={() => setRawView(false)}>Cerrar</button>
-        </div>
-      )}
+
 
       {/* Paginación simple */}
       <div className="pagination-bar">
